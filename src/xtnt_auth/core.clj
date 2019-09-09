@@ -27,8 +27,8 @@
       wrap-keyword-params
       wrap-json-params
       wrap-json-response))
-(defn -main
-	"A very simple web server using Ring and Jetty"
-	[port-number]
-	(jetty/run-jetty app
-                   {:port 6001}))
+
+(defn -main []
+	(jetty/run-jetty app {:port 8000})
+  (println (str "Server is running on port 8000")))
+

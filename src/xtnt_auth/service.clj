@@ -1,11 +1,12 @@
 (ns xtnt-auth.service
   (:require [buddy.hashers      :as hs]
             [xtnt-auth.store    :as store]
-            [buddy.sign.generic :as sign]
+            ;;[buddy.sign.generic :as sign]
             [buddy.sign.jws     :as jws]
             [buddy.core.keys    :as ks]
             [clj-time.core      :as t]
-            [clojure.java.io    :as io]))
+            [clojure.java.io    :as io]
+            [buddy.sign.util :as jws-util]))
 
 ;; Adding a user
 (defn add-user! [ds user]
@@ -13,7 +14,7 @@
 
 ;;Authenticating a user
 (defn auth-user [ds credentials]
-  (let [user (store/find-user ds (:username credentials))
+  (let [user (store/find-user-by-username ds (:username credentials))
         unauthed [false {:message "Invalid username or password"}]]
     (if user
       (if (hs/check (:password credentials) (:password user))
@@ -28,7 +29,7 @@
 
 (defn create-auth-token [ds auth-conf credentials]
   (let [[ok? res] (auth-user ds credentials)
-        exp (-> (t/plus (t/now) (t/days 1)) (jws/to-timestamp))]
+        exp (-> (t/plus (t/now) (t/days 1)) (jws-util/to-timestamp))]
     (if ok?
       [true {:token (jws/sign res
                               (pkey auth-conf)

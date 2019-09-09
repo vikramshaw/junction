@@ -1,4 +1,4 @@
-(ns xtnt-auth.handler
+(ns xtnt-auth.handlers
   (:require [xtnt-auth.service :as service]))
 
 (defn create-auth-token [req]
