@@ -1,8 +1,6 @@
 (ns xtnt-auth.store
   (:require [clojure.java.jdbc :as jdbc]))
 
-
-
 (defn add-user! [ds user]
   (jdbc/with-db-transaction [conn ds]
     (let [res (jdbc/insert! conn
@@ -14,7 +12,6 @@
                       :user_role
                       [:user_id :role_id]
                       [user-id (:role-id ur)])))))
-
 
 (defn- find-user-roles [conn user-id]
   (map (fn [row] {:role-id (:id row) :application-id (:application_id row)})
@@ -34,8 +31,6 @@
              (first
               (jdbc/query conn ["select * from user where id = ?" id]))]
     (assoc user :user-roles (find-user-roles conn (:id user)))))
-
-
 
 (defn add-refresh-token! [conn params]
   (jdbc/insert! conn :refresh_token params))

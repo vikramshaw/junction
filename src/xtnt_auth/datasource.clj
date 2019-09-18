@@ -7,5 +7,5 @@
 
 
 (defn get-ds []
-(defonce ds (make-datasource datasource-options))
-{:datasource ds})
+  (defonce ds (make-datasource datasource-options))
+  {:datasource ds})
