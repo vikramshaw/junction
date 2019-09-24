@@ -5,7 +5,7 @@
 (defn create-db [ds]
   (jdbc/with-db-connection [conn ds]
     (jdbc/db-do-commands conn
-                         "create table user (
+                         ["create table user (
                            id integer auto_increment primary key,
                            username varchar(255) not null,
                            password varchar(255) not null)"
@@ -34,26 +34,26 @@
                            issued long not null,
                            token varchar2(512) not null,
                            foreign key (user_id) references user (id),
-                           unique (user_id, issued))")))
+                           unique (user_id, issued))"])))
 
 
 (defn seed [ds]
   (jdbc/with-db-transaction [conn ds]
-    (jdbc/insert! conn :application
+    (jdbc/insert-multi! conn :application
                   [:id :name]
-                  [10 "webstore"]
+                  [[10 "webstore"]
                   [20 "crome"]
                   [30 "xtnt-admin"]
-                  [40 "catalog"])
-    (jdbc/insert! conn :role
+                  [40 "catalog"]])
+    (jdbc/insert-multi! conn :role
                   [:id :application_id :name]
-                  [10 10 "customer"]
+                  [[10 10 "customer"]
                   [11 10 "store-admin"]
                   [20 20 "customer-support"]
                   [21 20 "accounting"]
                   [30 30 "sysadmin"]
                   [40 40 "catalog-admin"]
-                  [41 40 "customer"]))
+                  [41 40 "customer"]]))
 
   ;; add a couple of users for testing/demo
   (service/add-user! ds {:username "test"
@@ -61,4 +61,8 @@
                          :user-roles [{:role-id 10} {:role-id 41}]})
   (service/add-user! ds {:username "admin"
                          :password "secret"
-                         :user-roles [{:role-id 11} {:role-id 40}]}))
+                         :user-roles [{:role-id 11} {:role-id 40}]})
+  
+  (service/add-user! ds {:username "vikram"
+                         :password "secret"
+                         :user-roles [{:role-id 30} {:role-id 30}]}))
