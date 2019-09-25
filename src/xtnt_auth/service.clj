@@ -1,7 +1,7 @@
 (ns xtnt-auth.service
   (:require [buddy.hashers      :as hs]
             [xtnt-auth.store    :as store]
-            [buddy.sign.jws     :as jws]
+            [buddy.sign.jwt     :as jwt]
             [buddy.core.keys    :as ks]
             [clj-time.core      :as t]
             [clojure.java.io    :as io]
@@ -33,19 +33,19 @@
 
 
 (defn- unsign-token [auth-conf token]
-  (jws/unsign token (pub-key auth-conf)))
+  (jwt/unsign token (pub-key auth-conf)))
 
 (defn- make-auth-token [auth-conf user]
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (util/to-timestamp))]
-    (jws/sign {:user (dissoc user :password)}
+    (jwt/sign {:user (dissoc user :password)}
               (priv-key auth-conf)
               {:alg :rs256 :typ :jws :exp exp})))
 
 (defn- make-refresh-token! [conn auth-conf user]
   (let [iat (util/to-timestamp (t/now))
-        token (jws/sign {:user-id (:id user)}
+        token (jwt/sign {:user-id (:id user)}
                         (priv-key auth-conf)
-                        {:alg :rs256 :typ :jws :iat iat :exp (-> (t/plus (t/now) (t/days 30)) (util/to-timestamp))})]
+                        {:alg :rs256 :typ :jwt :iat iat :exp (-> (t/plus (t/now) (t/days 30)) (util/to-timestamp))})]
 
     (store/add-refresh-token! conn {:user_id (:id user)
                                     :issued iat
