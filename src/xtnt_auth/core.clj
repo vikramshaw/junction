@@ -1,6 +1,5 @@
 (ns xtnt-auth.core
   (:require [compojure.core                 :refer [defroutes ANY POST]]
-            ;;[ring.adapter.jetty             :as    jetty]
             [ring.middleware.reload         :refer [wrap-reload]]
             [ring.middleware.params         :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
@@ -42,8 +41,6 @@
       wrap-json-response))
 
 (defn -main []
-	;;(jetty/run-jetty (wrap-reload #'app)
-  ;;                {:port 8000})
      (server/serve app {:port 8000
                         :init bootstrap})
   (println (str "Server is running on port 8000")))

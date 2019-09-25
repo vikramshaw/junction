@@ -17,12 +17,6 @@
 
   :repl-options {:init-ns xtnt-auth.core}
   :main xtnt-auth.core
-
-;; :ring {:handler xtnt-auth.core/app
-         ;;:port 6001
-         ;; :init xtnt-auth.core/bootstrap
-  ;;       }
-
   :profiles {:dev {:plugins [[lein-ring "0.12.5"]]
                    :test-paths ^:replace []}
              :test {:dependencies [[midje "1.9.9"]]
