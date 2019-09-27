@@ -17,9 +17,4 @@
 
   :repl-options {:init-ns xtnt-auth.core}
   :main xtnt-auth.core
-  :profiles {:dev {:plugins [[lein-ring "0.12.5"]]
-                   :test-paths ^:replace []}
-             :test {:dependencies [[midje "1.9.9"]]
-                    :test-paths ["test"]
-                    :resource-paths ["test/resources"]}}
-  )
+  :profiles {:dev {:plugins [[lein-ring "0.12.5"]]}})

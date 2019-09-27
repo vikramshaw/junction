@@ -1,0 +1,77 @@
+** jdbc/with-db-transaction
+
+Usage: (with-db-transaction binding & body)
+Evaluates body in the context of a transaction on the specified database connection.
+The binding provides the database connection for the transaction and the name to which
+that is bound for evaluation of the body. 
+
+#+BEGIN_SRC
+jdbc/insert!
+
+Usage: (insert! db table row)
+       (insert! db table cols-or-row values-or-opts)
+       (insert! db table cols values opts)
+#+END_SRC
+Given a database connection, a table name and either a map representing a rows,
+or a list of column names followed by a list of column values also representing
+a single row, perform an insert.
+When inserting a row as a map, the result is the database-specific form of the
+generated keys, if available (note: PostgreSQL returns the whole row).
+When inserting a row as a list of column values, the result is the count of
+rows affected (1), if available (from getUpdateCount after executeBatch).
+The row map or column value vector may be followed by a map of options:
+The :transaction? option specifies whether to run in a transaction or not.
+The default is true (use a transaction). The :entities option specifies how
+to convert the table name and column names to SQL entities.
+
+** jdbc/query
+#+BEGIN_SRC
+Usage: (query db sql-params)
+       (query db sql-params opts)
+#+END_SRC
+Given a database connection and a vector containing SQL and optional parameters,
+perform a simple database query. The options specify how to construct the result
+set (and are also passed to prepare-statement as needed):
+ + :as-arrays? - return the results as a set of arrays, default false.
+ + :identifiers - applied to each column name in the result set, default lower-case
+ + :keywordize? - defaults to true, can be false to opt-out of converting
+      identifiers to keywords
+ + :qualifier - optionally provides the namespace qualifier for identifiers
+ + :result-set-fn - applied to the entire result set, default doall / vec
+    -  if :as-arrays? true, :result-set-fn will default to vec
+    -  if :as-arrays? false, :result-set-fn will default to doall
+ + :row-fn - applied to each row as the result set is constructed, default identity
+
+
+In ~add-user!~ function the argument ~user~ contains auto increament ~:id~, ~:username~ and ~password~ of the user and are store in the variable ~res~. From this ~res~ we are extracting the ~first :id~ and storing as the ~user-id~.
+#+BEGIN_SRC
+ (let [res (jdbc/insert! conn
+                            :user
+                            {:username (:username user) :password (:password user)})
+          user-id (-> res first :id)])
+#+END_SRC
+Now using ~doseq~ loop we are segregating ~user-id~ according to ~user~
+#+BEGIN_SRC
+(doseq [ur (:user-roles user)]
+        (jdbc/insert! conn
+                      :user_role
+                      [:user_id :role_id]
+                      [user-id (:role-id ur)])
+#+END_SRC
+If you want to see the output of the add user function execute the below syntax
+#+BEGIN_SRC
+(defn add-user! [ds user]
+  (jdbc/with-db-transaction [conn ds]
+    (let [res (jdbc/insert! conn
+                            :user
+                            {:username (:username user) :password (:password user)})
+          user-id (-> res first :id)]
+      (println user)
+      (doseq [ur (:user-roles user)]
+        (jdbc/insert! conn
+                      :user_role
+                      [:user_id :role_id]
+                      [user-id (:role-id ur)])
+        (println user-id)))))
+#+END_SRC
+

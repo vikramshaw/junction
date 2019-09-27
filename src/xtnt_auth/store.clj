@@ -11,7 +11,7 @@
         (jdbc/insert! conn
                       :user_role
                       [:user_id :role_id]
-                [user-id (:role-id ur)])))))
+                      [user-id (:role-id ur)])))))
 
 (defn- find-user-roles [conn user-id]
   (map (fn [row] {:role-id (:id row) :application-id (:application_id row)})

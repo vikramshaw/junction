@@ -39,7 +39,7 @@
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (util/to-timestamp))]
     (jwt/sign {:user (dissoc user :password)}
               (priv-key auth-conf)
-              {:alg :rs256 :typ :jws :exp exp})))
+              {:alg :rs256 :typ :jwt :exp exp})))
 
 (defn- make-refresh-token! [conn auth-conf user]
   (let [iat (util/to-timestamp (t/now))

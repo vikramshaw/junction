@@ -1,0 +1,68 @@
+** Middleware
+Handlers are the functions that make up your application. They accept responses and return responses. Middleware is a set of functions that add additional functionality to handlers. They are higher-level functions in that they accept a handler as a parameter and return a value which is a new handler function that will call the original handler function. This pattern allows you to wrap your handler in a number of middleware functions to build up layers of functionality.
+*** wrap-json-response
+The wrap-json-response middleware will convert any response with a collection as a body (e.g. map, vector, set, seq, etc) into JSON.
+*** wrap-json-params
+The wrap-json-params middleware is an alternative to wrap-json-body for when it's convenient to treat a JSON request as a map of parameters. Rather than replace the :body key, the parsed data structure will be assigned to the :json-params. The parameters will also be merged into the standard :params map
+*** wrap-params and wrap-keyword-params 
+It convert the raw data into the parameter maps ~:keyword-params~ and ~:form-params~, combine those into single and easy to use :params maps and finally convert all the keys from string to clojure keywords.
+Since Ring middleware consist of simple data transformation function, we can string them together along with our composure routes to put together  an entire application
+#+BEGIN_SRC
+(def app
+  (-> app-routes
+      wrap-datasource
+      wrap-config
+      wrap-keyword-params
+      wrap-json-params
+      wrap-json-response))
+#+END_SRC
+** wrap-datasource and wrap-config functions
+These functions are adding a new field with a value to all requests. In *wrap-config* function you will notice 
+#+BEGIN_SRC
+{ :privkey "xtnt_privkey.pem" 
+  :pubkey "xtnt_pubkey.pem"}
+#+END_SRC
+These are nothing but the private key and public key files respectively which are in ~resources~ folder.
+** Bootstrap function
+This function takes the input from ~dbtable.clj~ and ~datasource.clj~ and create the database table and fill the data in the respective database table
+#+BEGIN_SRC
+(defn bootstrap []
+  (println "Bootstrapping....")
+  (let [ds (get-ds)]
+    (create-db ds)
+    (seed ds)))
+#+END_SRC
+This function needs to be execute as the server starts
+** -main function
+I have used ~ring.server~ for this project because it give us a lot of option for customization.
+The following options are supported:
++ ~:port~ - The port to start the server on, overrides $PORT
++ ~:join?~ - Whether to wait until the server stops (default true)
++ ~:init~ - A function executed when the server starts
++ ~:destroy~ - A function executed when the server stops
++ ~:open-browser?~ - True if you want a browser to be opened to the server. Defaults to true in development mode, false in production mode.
++ ~:browser-uri~ - A path to append to the target URL if opening a browser (default none). The full URI will be constructed like: http://{host}:{port}{browser-uri}
++ ~:stacktraces?~ - True if you want a stacktrace to be displayed in the browser when an exception is raised. Default to true in development, false in production.
++ ~:stacktrace-middleware~ - Override the default Ring stacktrace middleware with a custom middleware function.
++ ~:auto-reload?~ - True if you want your source files to be automatically reloaded when they are modified. Defaults to true in development, false in production.
++ ~:reload-paths~ - A seq of source paths to reload. Defaults to ["src"]. Only relevant if :auto-reload? is true.
++ ~:auto-refresh?~ - True if you want your browser to automatically refresh when source files are changed. Defaults to false.
++ ~:refresh-paths~ - A seq of source paths to refresh. Defaults to ["src" "resources"]. Only relevant if :auto-refresh? is true.
+
+** Dot Privacy Enhanced Mail (.pem) files
+This files are concatenated certificate containers frequently used in certificate installations when multiple certificates that form a complete chain are being imported as a single file. They are a defined standard in RFCs 1421 through 1424. They can be thought of as a layered container of chained certificates. A .pem file is a container format that may just include the public certificate or the entire certificate chain (private key, public key, root certificates).
+
+With the user store in place we can turn our attention to creating our (signed) token. Buddy provides us with buddy-sign. We could have opted for a HMAC based algorithm, but we’ll take it up one notch and use an algorithm that requires a public/private key-pair. Not only that, but we’ll serialize our token content in a json format following the jws draft spec.
+*** How to generate the private key and public key?
+In ~Terminal or Shell~ Goto your project resource folder ~(xtnt-auth/resources)~ and execute the below command.
+You’ll be asked to enter a passphrase in both steps below(passphrase is nothing but which you have defined in ~core.clj~ file in ~wrap-config~ function line number 33).
+#+ATTR_HTML: :textarea t :width 40
+#+BEGIN_EXAMPLE
+openssl genrsa -aes256 -out xtnt_privkey.pem 2048
+#+END_EXAMPLE
+The above code will generate AES-256 encrypted private key in resource folder. The below code is for public key which will be generated with respect to private key.
+#+ATTR_HTML: :textarea t :width 40
+#+BEGIN_EXAMPLE
+openssl rsa -pubout -in xtnt_privkey.pem -out xtnt_pubkey.pem
+#+END_EXAMPLE
+

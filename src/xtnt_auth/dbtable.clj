@@ -2,6 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [xtnt-auth.service :as service]))
 
+;; Creating database table
 (defn create-db [ds]
   (jdbc/with-db-connection [conn ds]
     (jdbc/db-do-commands conn
@@ -39,21 +40,23 @@
 
 (defn seed [ds]
   (jdbc/with-db-transaction [conn ds]
+    ;;inserting few datas in application table
     (jdbc/insert-multi! conn :application
                   [:id :name]
                   [[10 "webstore"]
-                  [20 "crome"]
-                  [30 "xtnt-admin"]
-                  [40 "catalog"]])
+                   [20 "crome"]
+                   [30 "xtnt-admin"]
+                   [40 "catalog"]])
+    ;;inserting few datas in role table
     (jdbc/insert-multi! conn :role
                   [:id :application_id :name]
                   [[10 10 "customer"]
-                  [11 10 "store-admin"]
-                  [20 20 "customer-support"]
-                  [21 20 "accounting"]
-                  [30 30 "sysadmin"]
-                  [40 40 "catalog-admin"]
-                  [41 40 "customer"]]))
+                   [11 10 "store-admin"]
+                   [20 20 "customer-support"]
+                   [21 20 "accounting"]
+                   [30 30 "sysadmin"]
+                   [40 40 "catalog-admin"]
+                   [41 40 "customer"]]))
 
   ;; add a couple of users for testing/demo
   (service/add-user! ds {:username "test"
