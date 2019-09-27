@@ -1,0 +1,11 @@
+** How to run xtnt-auth project?
++ Download [[https://h2database.com/html/main.html][H2 database]] and unzip the file
++ In H2 folder you will find bin folder, open that and there you will find *.jar file* (h2-1.4.197.jar)
++ Double click on the jar file and it will automatically open the login page in the browser.
++ In login diolouge box you need to choose ~Generic H2(server)~ and then click on save.
++ No ~username~ and ~password~ is needed.
++ Click on connect option and it will make the server ready to connect with your application.
++ Now from shell or terminal run ~lein run~ and wait for some time it will automatically open your browser and run your application on ~port 8000~
++ On the left hand side you will find the list of the table which we have created from dbtable.clj file.
++ If you want to delete the table you need to run the command ~DROP TABLE TABLE-NAME;~ for example ~DROP TABLE APPLICATION;~ and click on *Run selected* option.
+
