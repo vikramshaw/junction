@@ -26,4 +26,27 @@ If it exist then it will show message *User already exist* and if it doesn't exi
       {:status 201 :body res}
       {:status 401 :body res})))
 #+END_SRC
- 
+
+* How to check that the sign-up handler is working or not? 
+In terminal run this command
+
+~curl -i -X POST -d '{"username": "test1", "password":"secret"}' -H "Content-type: application/json" http://localhost:4000/sign-up~
+
+Now if the username in database is *not present* then it will give the output as:
+#+BEGIN_SRC
+HTTP/1.1 201 Created
+Date: Sun, 12 Jan 2020 10:22:36 GMT
+Content-Length: 0
+Server: Jetty(9.4.12.v20180830)
+#+END_SRC
+
+If it is *present* in the database:
+#+BEGIN_SRC
+HTTP/1.1 401 Unauthorized
+Date: Sun, 12 Jan 2020 10:25:24 GMT
+Content-Type: application/json;charset=utf-8
+Content-Length: 32
+Server: Jetty(9.4.12.v20180830)
+
+{"message":"User already exist"}
+#+END_SRC
