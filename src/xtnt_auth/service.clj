@@ -96,3 +96,13 @@
                              :password (:password credentials)})]
         already-exist))))
 
+(defn password-recovery [conn username old-password new-password]
+  (let [user (jdbc/query conn ["select * from user where username = ? and password =?" username old-password])
+        error [false {:message "Username or Password doesn't match"}]
+        success [true {:message "Password has been changed successfully"}]
+        ]
+    
+    (if (nil? user)
+      error
+      [true (jdbc/update! conn :user {:password new-password}) success])
+    ))
