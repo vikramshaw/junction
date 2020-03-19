@@ -1,16 +1,13 @@
 (ns xtnt-auth.core
   (:require [compojure.core                 :refer [defroutes ANY POST]]
-            [compojure.route                :refer [not-found resources]]
             [ring.middleware.reload         :refer [wrap-reload]]
             [ring.middleware.params         :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.json           :refer [wrap-json-response
                                                     wrap-json-params]]
-            [ring.middleware.cors           :refer [wrap-cors]]
             [xtnt-auth.datasource           :refer [get-ds]]
             [xtnt-auth.dbtable              :refer [create-db seed]]
             [xtnt-auth.handlers             :as     handlers]
-            [xtnt-auth.service              :as     service]
             [ring.server.standalone         :as     server]))
 
 (defn bootstrap []
@@ -37,20 +34,9 @@
     (handler (assoc req :auth-conf {:privkey "xtnt_privkey.pem"
                                     :pubkey "xtnt_pubkey.pem"
                                     :passphrase "secret-key"}))))
-(def handler
-  (wrap-cors app-routes
-             :access-control-allow-origin [#".*"]
-             :access-control-allow-methods [:get :put :post :delete]
-             :access-control-allow-headers ["accept"
-                                            "origin"
-                                            "accept-encoding"
-                                            "accept-language"
-                                            "content-type"
-                                            "authorization"]
-             :access-control-allow-credentials ["true"]))
 
 (def app
-  (-> handler
+  (-> app-routes
       wrap-datasource
       wrap-config
       wrap-keyword-params
@@ -58,6 +44,6 @@
       wrap-json-response))
 
 (defn -main []
-  (server/serve (wrap-reload #'app) {:port 4000
-                                     :init bootstrap})
-  (println (str "Server is running on port 4000")))
+     (server/serve app {:port 8000
+                        :init bootstrap})
+  (println (str "Server is running on port 8000")))
