@@ -5,7 +5,10 @@
 + In login diolouge box you need to choose ~Generic H2(server)~ and then click on save.
 + No ~username~ and ~password~ is needed.
 + Click on connect option and it will make the server ready to connect with your application.
++ In case there's an issue wherein a message  appears in the login dialogue box that you're unable
+  to connect, create a new database in the running H2 application and set username and password.
++ Next, enter ~jdbc:h2:./test~ in JDBC URL of the login page. Mention username and password as that for
+  teh above created database.
 + Now from shell or terminal run ~lein run~ and wait for some time it will automatically open your browser and run your application on ~port 8000~
 + On the left hand side you will find the list of the table which we have created from dbtable.clj file.
 + If you want to delete the table you need to run the command ~DROP TABLE TABLE-NAME;~ for example ~DROP TABLE APPLICATION;~ and click on *Run selected* option.
-
