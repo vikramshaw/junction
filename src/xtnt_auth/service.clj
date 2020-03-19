@@ -85,3 +85,13 @@
           (store/invalidate-token! conn (:user-id unsigned) (:issued unsigned)))
         [true {:message "Invalidated succssfully"}])
       [false {:message "Invalid or expired refresh token provided"}])))
+
+(defn sign-up [ds credentials]
+  (jdbc/with-db-transaction [conn ds]
+    (let [user (store/find-user-by-username conn (:username credentials)) 
+          error [false {:message "Error adding User"}]
+          already-exist [false {:message "User already exist"}]]
+      (if (nil? user)
+        [true (add-user! ds {:username (:username credentials)
+                             :password (:password credentials)})]
+        already-exist))))
