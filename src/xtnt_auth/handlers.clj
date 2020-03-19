@@ -9,6 +9,20 @@
       {:status 201 :body res}
       {:status 401 :body res})))
 
+(defn sign-up [req]
+  (let [[ok? res] (service/sign-up (:datasource req)
+                                   (:params req))]
+    (if ok?
+      {:status 201 :body res}
+      {:status 401 :body res})))
+
+(defn password-recovery [req]
+  (let [[ok? res] (service/password-recovery (:datasource req)
+                                             (:params req))]
+    (if ok?
+      {:status 201 :body res}
+      {:status 401 :body res})))
+
 (defn refresh-auth-token [req]
   (let [refresh-token (-> req :params :refresh-token)
         [ok? res] (service/refresh-auth-token (:datasource req)

@@ -10,6 +10,7 @@
                  [hikari-cp "2.9.0"]
                  [ring/ring-json "0.5.0"]
                  [ring "1.7.1"]
+                 [ring-cors "0.1.13"]
                  [ch.qos.logback/logback-classic "1.3.0-alpha4"]
                  [buddy/buddy-sign "3.1.0"]
                  [buddy/buddy-hashers "1.4.0"]
