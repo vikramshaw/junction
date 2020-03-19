@@ -44,6 +44,6 @@
       wrap-json-response))
 
 (defn -main []
-     (server/serve app {:port 8000
+     (server/serve app {:port 4000
                         :init bootstrap})
-  (println (str "Server is running on port 8000")))
+  (println (str "Server is running on port 4000")))
