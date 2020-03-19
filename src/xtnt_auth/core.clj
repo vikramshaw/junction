@@ -25,7 +25,6 @@
   (POST "/refresh-auth-token" [] handlers/refresh-auth-token)
   (POST "/invalidate-refresh-token" [] handlers/invalidate-refresh-token)
   (POST "/sign-up" [] handlers/sign-up)
-  (POST "/password-recovery" [] handlers/password-recovery)
   (resources "/")
 	(not-found "<h1>Page not found</h1>"))
 
