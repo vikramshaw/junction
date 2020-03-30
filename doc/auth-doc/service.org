@@ -1,21 +1,33 @@
 ** What is token based authentication?
-The general concept behind a token-based authentication system is simple. Allow users to enter their username and password in order to obtain a token which allows them to fetch a specific resource - without using their username and password. Once their token has been obtained, the user can offer the token - which offers access to a specific resource for a time period - to the remote site.
+The general concept behind a token-based authentication system is simple. Allow users to enter their
+username and password in order to obtain a token which allows them to fetch a specific resource -
+without using their username and password. Once their token has been obtained, the user can offer
+the token - which offers access to a specific resource for a time period - to the remote site.
 
 ** Password hashing
 We need to store our passwords securely hashed in the user table. Buddy provides [[https://github.com/funcool/buddy-hashers][buddy-hashers]].
 
 ** Adding a user
-#+BEGIN_SRC
+
+#+BEGIN_SRC clojure
 (defn add-user! [ds user]
   (store/add-user! ds (update-in user [:password] #(hs/encrypt %))))
 #+END_SRC
 
-hs/encrypt - Hashes the password using bcrypt+sha512 (default, others available). Buddy generates a random *salt* if you don’t provide one as an option param.
-By *salt* it means in cryptography, a salt is random data that is used as an additional input to a one-way function that "hashes" data, a password or passphrase. Salts are used to safeguard passwords in storage.
+~hs/encrypt~ - Hashes the password using bcrypt+sha512 (default, others available). Buddy generates a
+random *salt* if you don’t provide one as an option param. In cryptography, salt is random data that
+is used as an additional input to a one-way function that "hashes" data, a password or passphrase.
+Salts are used to safeguard passwords in storage.
+
+This function calls the function of the same name inside ~store.clj~.
 
 ** Authenticating a user
-We are authenticating a user by checking the user credentials (username and password) which are store in the database.
-#+BEGIN_SRC
+We are authenticating a user by checking the user credentials (username and password) which are
+stored in the database. First, ~find-user-by-username~ is called from ~store.org~ wherein the
+~:username~ is checked against those present and stored in ~user~. ~unauthed~ stores a vector of
+~false~ and ~:message~ key with ~Invalid username or password~.
+
+#+BEGIN_SRC clojure
 (defn auth-user [conn credentials]
   (let [user (store/find-user-by-username conn (:username credentials))
         unauthed [false {:message "Invalid username or password"}]]
@@ -29,39 +41,65 @@ We are authenticating a user by checking the user credentials (username and pass
 1. Verify provided plain text password credential against the hashed password in the db
 2. You probably don’t want to ship the password in the token !
 
-The ~priv-key~ and ~pub-key~ are the helper function to read the private key and public key respectively, which we have generated.(Explained in core.org)
+The ~priv-key~ and ~pub-key~ are the helper functions to read the private key and public key
+respectively, which we have generated. (Explained in ~core.org~)
 
 ** Json Web Token
-JSON Web Token (JWT) is a compact claims representation format intended for space constrained environments such as HTTP Authorization headers and URI query parameters. JWTs encode claims to be transmitted as a JavaScript Object Notation (JSON) object that is used as the payload of a JSON Web Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure, enabling the claims to be digitally signed or MACed and/or encrypted.
+JSON Web Token (JWT) is a compact claims representation format intended for space constrained
+environments such as HTTP Authorization headers and URI query parameters. JWTs encode claims to be
+transmitted as a JavaScript Object Notation (JSON) object that is used as the payload of a JSON Web
+Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure, enabling the
+claims to be digitally signed or MACed and/or encrypted.
+
 ** Signing data
-We will use the sign function from buddy.sign.jws namespace, and the hs256 algorithm for signining:
-#+BEGIN_SRC
+We will use the ~sign~ function from ~buddy.sign.jws~ namespace, and the hs256 algorithm for
+signing:
+
+#+BEGIN_SRC clojure
 (require '[buddy.sign.jwt :as jwt])
 
 (jwt/sign {:userid 1} "secret")
 ;; "eyJ0eXAiOiJKV1MiLCJhbGciOiJIU..."
 #+END_SRC
-The sign function return a encoded and signed token as plain String instance or an exception in case of something goes wrong. As you can observe, no algorithm is passed as parameter. In this situations the default one will be used, and in this case is :hs256.
+
+The sign function returns an encoded and signed token as plain String instance or an exception in
+case something goes wrong. As you can observe, no algorithm is passed as parameter. In these
+situations the default one will be used, and in this case is :hs256.
+
 ** Unsigning data
-This process consists on verify the signature of incoming data and return the plain data (without signature). For it we will use the unsign function from buddy.sign.jwt namespace:
-#+BEGIN_SRC
+This process consists verifying the signature of incoming data and returning the plain data (without
+signature). For it we will use the unsign function from ~buddy.sign.jwt~ namespace:
+
+#+BEGIN_SRC clojure
 (jwt/unsign data "secret")
 ;; => {:userid 1}
 #+END_SRC
+
 ** Claims validation
-Buddy-sign json web signature implements validation of a concrete subset of claims: *iat* (issue time), *exp* (expiration time), *nbf* (not before), *iss* (issuer) and *aud* (audience).
+Buddy-sign json web signature implements validation of a concrete subset of claims:
+*iat* (issue time), *exp* (expiration time), *nbf* (not before), *iss* (issuer) and *aud*
+(audience).
 + *Issuer (iss)* - identifies principal that issued the JWT;
 + *Subject (sub)* - identifies the subject of the JWT;
-+ *Audience (aud)* - The "aud" (audience) claim identifies the recipients that the JWT is intended for. Each principal intended to process the JWT must identify itself with a value in the audience claim. If the principal processing the claim does not identify itself with a value in the aud claim when this claim is present, then the JWT must be rejected.
-+ *Expiration time (exp)* - The "exp" (expiration time) claim identifies the expiration time on or after which the JWT must not be accepted for processing. The value should be in NumericDate[10][11] format.
-+ *Not before (nbf)* - Similarly, the not-before time claim identifies the time on which the JWT will start to be accepted for processing.
++ *Audience (aud)* - The "aud" (audience) claim identifies the recipients that the JWT is intended
+for. Each principal intended to process the JWT must identify itself with a value in the audience
+claim. If the principal processing the claim does not identify itself with a value in the aud claim
+when this claim is present, then the JWT must be rejected.
++ *Expiration time (exp)* - The "exp" (expiration time) claim identifies the expiration time on or
+after which the JWT must not be accepted for processing. The value should be in NumericDate[10][11]
+format.
++ *Not before (nbf)* - Similarly, the not-before time claim identifies the time on which the JWT will
+start to be accepted for processing.
 + *Issued at (iat)* - The "iat" (issued at) claim identifies the time at which the JWT was issued.
 + *JWT ID (jti)* - case sensitive unique identifier of the token even among different issuers.
 
-The validation is performed on decoding the token. If :exp claim is found and is after to the current date time (UTC) an validation exception will be raised. Alternatively, the time to validate token against can be specified as :now option to unsign.
+The validation is performed on decoding the token. If :exp claim is found and is after to the current
+date time (UTC) an validation exception will be raised. Alternatively, the time to validate token
+against can be specified as :now option to unsign.
 
-Let see an example using direct api:
-#+BEGIN_SRC
+Let's see an example using direct api:
+
+#+BEGIN_SRC clojure
 (require '[clj-time.core :as time])
 
 ;; Define claims with `:exp` key
@@ -82,40 +120,55 @@ Let see an example using direct api:
 #+END_SRC
 
 Now let's look into  ~make-auth-token~ function:-
-#+BEGIN_SRC
+
+#+BEGIN_SRC clojure
 (defn- make-auth-token [auth-conf user]
 
 ;; We are making the token valid for 30 mins 
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (util/to-timestamp))]
   
 ;; Don’t want to ship the password in the token!
-;; The sign function return a encoded and signed token as plain String instance
+;; The sign function returns an encoded and signed token as plain String instance
 
   (jwt/sign {:user (dissoc user :password)}
  ;; Adding the private key to the sign function
               (priv-key auth-conf)
               {:alg :rs256 :typ :jwt :exp exp})))
 #+END_SRC
-+ *alg:* We have two main algorithms(HS256/RS256) to sign our JWT (Signature) which is mentioned in the headers so that the producer and consumer both should use the same algorithm to verify the token on each end. HS256 indicates that this token is signed using HMAC-SHA256.
-+ *Producer* is the one who gives a service. It will be the provider(Server) of the API(s) which are JWT protected.
-+ *Consumer* is the one who uses it. It will be the customer(Server/Mobile App/ Web App/ Client) who will be providing the valid JWT token to consume the API(s) being provided by the Producer.
 
-In case of ~make-refresh-token!~ function instead of defining the *Expiration time (exp)* for the token and then serialize and sign a token, here we first serialize and sign a token and then defining the Expiration time (exp) for the token.
-#+BEGIN_SRC
++ *alg:* We have two main algorithms(HS256/RS256) to sign our JWT (Signature) which is mentioned in
+the headers so that the producer and consumer both use the same algorithm to verify the token on
+each end. HS256 indicates that this token is signed using HMAC-SHA256.
++ *Producer* is the one who gives a service. It will be the provider (Server) of the API(s) which
+are JWT protected.
++ *Consumer* is the one who uses it. It will be the customer (Server/Mobile App/Web App/Client) who
+will be providing the valid JWT token to consume the API(s) being provided by the Producer.
+
+In case of ~make-refresh-token!~ function, instead of defining the *Expiration time (exp)* for the
+token and then serializing and signing a token, here we first serialize and sign a token and then
+define the Expiration time (exp) for the token.
+
+#+BEGIN_SRC clojure
  (let [iat (util/to-timestamp (t/now))
         token (jwt/sign {:user-id (:id user)}
                         (priv-key auth-conf)
                         {:alg :rs256 :typ :jwt :iat iat :exp (-> (t/plus (t/now) (t/days 30)) (util/to-timestamp))})] token)
 #+END_SRC
+
 After that storing all the data in ~:refresh_token~ in ~store/add-refresh-token!~
-#+BEGIN_SRC
+
+#+BEGIN_SRC clojure
    (store/add-refresh-token! conn {:user_id (:id user)
                                     :issued iat
                                     :token token})
 #+END_SRC
 
-~create-auth-token~ function first takes the credentials of the user and check for the authentication and if it is true then with the help of ~make-token-pair!~ function it set the timestamp for the experation of the token and create a sign token. It also store the token with respectt the user.
-#+BEGIN_SRC
+~create-auth-token~ function first takes the credentials of the user and check for the
+authentication and if it is true then with the help of ~make-token-pair!~ function it sets the
+timestamp for the expiration of the token and creates a sign token.
+It also stores the token with respect to the user.
+
+#+BEGIN_SRC clojure
 (defn create-auth-token [ds auth-conf credentials]
   (jdbc/with-db-transaction [conn ds]
     (let [[ok? res] (auth-user conn credentials)]
@@ -125,28 +178,34 @@ After that storing all the data in ~:refresh_token~ in ~store/add-refresh-token!
 #+END_SRC
 
 *** if-let
-#+BEGIN_SRC
+
+#+BEGIN_SRC clojure
 (if-let bindings then)  (if-let bindings then else & oldform)
 #+END_SRC
-#+BEGIN_EXAMPLE
+
 bindings => binding-form test
- If test is true, evaluates then with binding-form bound to the value of 
+If test is true, evaluates then with binding-form bound to the value of 
 test, if not, yields else
-#+END_EXAMPLE
 
 Now if you look into ~refresh-auth-token~ function
-#+BEGIN_SRC
+
+#+BEGIN_SRC clojure
 (if-let [unsigned (unsign-token auth-conf refresh-token)]
         .......)
 #+END_SRC
+
 is similar to
-#+BEGIN_SRC
+
+#+BEGIN_SRC clojure
 (let [unsigned (unsign-token auth-conf refresh-token)]
     (if unsigned
       ......))
 #+END_SRC
-If the above value is ~usigned~ then only it will execute the next syntax or else it will execute the ~false~ statement
-#+BEGIN_SRC
+
+If the above value is ~unsigned~ only then will it execute the next syntax or else it will execute
+the ~false~ statement
+
+#+BEGIN_SRC clojure
 (defn refresh-auth-token [ds auth-conf refresh-token]
   (if-let [unsigned (unsign-token auth-conf refresh-token)]
     (jdbc/with-db-transaction [conn ds]

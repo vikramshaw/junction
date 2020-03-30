@@ -65,7 +65,6 @@
   (service/add-user! ds {:username "admin"
                          :password "secret"
                          :user-roles [{:role-id 11} {:role-id 40}]})
-  
   (service/add-user! ds {:username "vikram"
                          :password "secret"
                          :user-roles [{:role-id 30} {:role-id 30}]}))

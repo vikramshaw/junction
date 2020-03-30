@@ -1,0 +1,220 @@
+2020-03-24 16:08:12 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USER" already exists; SQL statement:
+create table user (
+                           id integer auto_increment primary key,
+                           username varchar(255) not null,
+                           password varchar(255) not null) [42101-199]
+2020-03-24 16:08:12 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "APPLICATION" already exists; SQL statement:
+create table application (
+                           id integer auto_increment primary key,
+                           name varchar(255) not null) [42101-199]
+2020-03-24 16:08:12 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "ROLE" already exists; SQL statement:
+create table role (
+                           id integer auto_increment primary key,
+                           application_id integer not null,
+                           name varchar(255) not null,
+                           foreign key (application_id) references application (id)) [42101-199]
+2020-03-24 16:08:12 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USER_ROLE" already exists; SQL statement:
+create table user_role (
+                           id integer auto_increment primary key,
+                           role_id integer not null,
+                           user_id integer not null,
+                           foreign key (role_id) references role (id),
+                           foreign key (user_id) references user (id)) [42101-199]
+2020-03-24 16:08:12 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REFRESH_TOKEN" already exists; SQL statement:
+create table refresh_token (
+                           id integer auto_increment primary key,
+                           user_id integer not null,
+                           valid boolean default true not null,
+                           issued long not null,
+                           token varchar2(512) not null,
+                           foreign key (user_id) references user (id),
+                           unique (user_id, issued)) [42101-199]
+2020-03-24 16:08:12 jdbc[3]: exception
+org.h2.jdbc.JdbcBatchUpdateException: Table "REFRESH_TOKEN" already exists; SQL statement:
+create table refresh_token (
+                           id integer auto_increment primary key,
+                           user_id integer not null,
+                           valid boolean default true not null,
+                           issued long not null,
+                           token varchar2(512) not null,
+                           foreign key (user_id) references user (id),
+                           unique (user_id, issued)) [42101-199]
+	at org.h2.jdbc.JdbcStatement.executeBatch(JdbcStatement.java:792)
+	at com.zaxxer.hikari.pool.ProxyStatement.executeBatch(ProxyStatement.java:128)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.executeBatch(HikariProxyStatement.java)
+	at clojure.java.jdbc$execute_batch.invokeStatic(jdbc.clj:598)
+	at clojure.java.jdbc$execute_batch.invoke(jdbc.clj:591)
+	at clojure.java.jdbc$db_do_commands$fn__5044.invoke(jdbc.clj:947)
+	at clojure.java.jdbc$db_transaction_STAR_.invokeStatic(jdbc.clj:806)
+	at clojure.java.jdbc$db_transaction_STAR_.invoke(jdbc.clj:776)
+	at clojure.java.jdbc$db_transaction_STAR_.invokeStatic(jdbc.clj:789)
+	at clojure.java.jdbc$db_transaction_STAR_.invoke(jdbc.clj:776)
+	at clojure.java.jdbc$db_do_commands.invokeStatic(jdbc.clj:946)
+	at clojure.java.jdbc$db_do_commands.invoke(jdbc.clj:931)
+	at clojure.java.jdbc$db_do_commands.invokeStatic(jdbc.clj:937)
+	at clojure.java.jdbc$db_do_commands.invoke(jdbc.clj:931)
+	at xtnt_auth.dbtable$create_db.invokeStatic(dbtable.clj:8)
+	at xtnt_auth.dbtable$create_db.invoke(dbtable.clj:6)
+	at xtnt_auth.core$bootstrap.invokeStatic(core.clj:19)
+	at xtnt_auth.core$bootstrap.invoke(core.clj:16)
+	at ring.server.standalone$serve.invokeStatic(standalone.clj:96)
+	at ring.server.standalone$serve.doInvoke(standalone.clj:75)
+	at clojure.lang.RestFn.invoke(RestFn.java:423)
+	at xtnt_auth.core$_main.invokeStatic(core.clj:61)
+	at xtnt_auth.core$_main.invoke(core.clj:60)
+	at clojure.lang.Var.invoke(Var.java:380)
+	at user$eval140.invokeStatic(form-init2451259606346141895.clj:1)
+	at user$eval140.invoke(form-init2451259606346141895.clj:1)
+	at clojure.lang.Compiler.eval(Compiler.java:7176)
+	at clojure.lang.Compiler.eval(Compiler.java:7166)
+	at clojure.lang.Compiler.load(Compiler.java:7635)
+	at clojure.lang.Compiler.loadFile(Compiler.java:7573)
+	at clojure.main$load_script.invokeStatic(main.clj:452)
+	at clojure.main$init_opt.invokeStatic(main.clj:454)
+	at clojure.main$init_opt.invoke(main.clj:454)
+	at clojure.main$initialize.invokeStatic(main.clj:485)
+	at clojure.main$null_opt.invokeStatic(main.clj:519)
+	at clojure.main$null_opt.invoke(main.clj:516)
+	at clojure.main$main.invokeStatic(main.clj:598)
+	at clojure.main$main.doInvoke(main.clj:561)
+	at clojure.lang.RestFn.applyTo(RestFn.java:137)
+	at clojure.lang.Var.applyTo(Var.java:705)
+	at clojure.main.main(main.java:37)
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REFRESH_TOKEN" already exists; SQL statement:
+create table refresh_token (
+                           id integer auto_increment primary key,
+                           user_id integer not null,
+                           valid boolean default true not null,
+                           issued long not null,
+                           token varchar2(512) not null,
+                           foreign key (user_id) references user (id),
+                           unique (user_id, issued)) [42101-199]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:451)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:427)
+	at org.h2.message.DbException.get(DbException.java:205)
+	at org.h2.message.DbException.get(DbException.java:181)
+	at org.h2.command.ddl.CreateTable.update(CreateTable.java:85)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:133)
+	at org.h2.command.Command.executeUpdate(Command.java:267)
+	at org.h2.jdbc.JdbcStatement.executeUpdateInternal(JdbcStatement.java:169)
+	at org.h2.jdbc.JdbcStatement.executeBatch(JdbcStatement.java:777)
+	at com.zaxxer.hikari.pool.ProxyStatement.executeBatch(ProxyStatement.java:128)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.executeBatch(HikariProxyStatement.java)
+	at clojure.java.jdbc$execute_batch.invokeStatic(jdbc.clj:598)
+	at clojure.java.jdbc$execute_batch.invoke(jdbc.clj:591)
+	at clojure.java.jdbc$db_do_commands$fn__5044.invoke(jdbc.clj:947)
+	at clojure.java.jdbc$db_transaction_STAR_.invokeStatic(jdbc.clj:806)
+	at clojure.java.jdbc$db_transaction_STAR_.invoke(jdbc.clj:776)
+	at clojure.java.jdbc$db_transaction_STAR_.invokeStatic(jdbc.clj:789)
+	at clojure.java.jdbc$db_transaction_STAR_.invoke(jdbc.clj:776)
+	at clojure.java.jdbc$db_do_commands.invokeStatic(jdbc.clj:946)
+	at clojure.java.jdbc$db_do_commands.invoke(jdbc.clj:931)
+	at clojure.java.jdbc$db_do_commands.invokeStatic(jdbc.clj:937)
+	at clojure.java.jdbc$db_do_commands.invoke(jdbc.clj:931)
+	at xtnt_auth.dbtable$create_db.invokeStatic(dbtable.clj:8)
+	at xtnt_auth.dbtable$create_db.invoke(dbtable.clj:6)
+	at xtnt_auth.core$bootstrap.invokeStatic(core.clj:19)
+	at xtnt_auth.core$bootstrap.invoke(core.clj:16)
+	at ring.server.standalone$serve.invokeStatic(standalone.clj:96)
+	at ring.server.standalone$serve.doInvoke(standalone.clj:75)
+	at clojure.lang.RestFn.invoke(RestFn.java:423)
+	at xtnt_auth.core$_main.invokeStatic(core.clj:61)
+	at xtnt_auth.core$_main.invoke(core.clj:60)
+	at clojure.lang.Var.invoke(Var.java:380)
+	at user$eval140.invokeStatic(form-init2451259606346141895.clj:1)
+	at user$eval140.invoke(form-init2451259606346141895.clj:1)
+	at clojure.lang.Compiler.eval(Compiler.java:7176)
+	at clojure.lang.Compiler.eval(Compiler.java:7166)
+	at clojure.lang.Compiler.load(Compiler.java:7635)
+	at clojure.lang.Compiler.loadFile(Compiler.java:7573)
+	at clojure.main$load_script.invokeStatic(main.clj:452)
+	at clojure.main$init_opt.invokeStatic(main.clj:454)
+	at clojure.main$init_opt.invoke(main.clj:454)
+	at clojure.main$initialize.invokeStatic(main.clj:485)
+	at clojure.main$null_opt.invokeStatic(main.clj:519)
+	at clojure.main$null_opt.invoke(main.clj:516)
+	at clojure.main$main.invokeStatic(main.clj:598)
+	at clojure.main$main.doInvoke(main.clj:561)
+	at clojure.lang.RestFn.applyTo(RestFn.java:137)
+	at clojure.lang.Var.applyTo(Var.java:705)
+	at clojure.main.main(main.java:37)
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USER_ROLE" already exists; SQL statement:
+create table user_role (
+                           id integer auto_increment primary key,
+                           role_id integer not null,
+                           user_id integer not null,
+                           foreign key (role_id) references role (id),
+                           foreign key (user_id) references user (id)) [42101-199]
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "ROLE" already exists; SQL statement:
+create table role (
+                           id integer auto_increment primary key,
+                           application_id integer not null,
+                           name varchar(255) not null,
+                           foreign key (application_id) references application (id)) [42101-199]
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "APPLICATION" already exists; SQL statement:
+create table application (
+                           id integer auto_increment primary key,
+                           name varchar(255) not null) [42101-199]
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USER" already exists; SQL statement:
+create table user (
+                           id integer auto_increment primary key,
+                           username varchar(255) not null,
+                           password varchar(255) not null) [42101-199]
+2020-03-24 16:08:12 database: flush
+org.h2.message.DbException: General error: "java.lang.IllegalStateException: The file is locked: nio:/home/azureus/Documents/Frnt Baishakhi/stamp/test.mv.db [1.4.199/7]" [50000-199]
+	at org.h2.message.DbException.get(DbException.java:194)
+	at org.h2.message.DbException.convert(DbException.java:347)
+	at org.h2.mvstore.db.MVTableEngine$1.uncaughtException(MVTableEngine.java:90)
+	at org.h2.mvstore.MVStore.handleException(MVStore.java:2787)
+	at org.h2.mvstore.MVStore.panic(MVStore.java:441)
+	at org.h2.mvstore.MVStore.<init>(MVStore.java:404)
+	at org.h2.mvstore.MVStore$Builder.open(MVStore.java:3343)
+	at org.h2.mvstore.db.MVTableEngine$Store.open(MVTableEngine.java:162)
+	at org.h2.mvstore.db.MVTableEngine.init(MVTableEngine.java:95)
+	at org.h2.engine.Database.getPageStore(Database.java:2739)
+	at org.h2.engine.Database.open(Database.java:769)
+	at org.h2.engine.Database.openDatabase(Database.java:319)
+	at org.h2.engine.Database.<init>(Database.java:313)
+	at org.h2.engine.Engine.openSession(Engine.java:69)
+	at org.h2.engine.Engine.openSession(Engine.java:201)
+	at org.h2.engine.Engine.createSessionAndValidate(Engine.java:178)
+	at org.h2.engine.Engine.createSession(Engine.java:161)
+	at org.h2.engine.Engine.createSession(Engine.java:31)
+	at org.h2.engine.SessionRemote.connectEmbeddedOrServer(SessionRemote.java:336)
+	at org.h2.jdbc.JdbcConnection.<init>(JdbcConnection.java:169)
+	at org.h2.jdbc.JdbcConnection.<init>(JdbcConnection.java:148)
+	at org.h2.Driver.connect(Driver.java:69)
+	at org.h2.jdbcx.JdbcDataSource.getJdbcConnection(JdbcDataSource.java:189)
+	at org.h2.jdbcx.JdbcDataSource.getConnection(JdbcDataSource.java:178)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:353)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:201)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:473)
+	at com.zaxxer.hikari.pool.HikariPool.access$100(HikariPool.java:71)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:727)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:713)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+Caused by: org.h2.jdbc.JdbcSQLNonTransientException: General error: "java.lang.IllegalStateException: The file is locked: nio:/home/azureus/Documents/Frnt Baishakhi/stamp/test.mv.db [1.4.199/7]" [50000-199]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:502)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:427)
+	... 34 more
+Caused by: java.lang.IllegalStateException: The file is locked: nio:/home/azureus/Documents/Frnt Baishakhi/stamp/test.mv.db [1.4.199/7]
+	at org.h2.mvstore.DataUtils.newIllegalStateException(DataUtils.java:883)
+	at org.h2.mvstore.FileStore.open(FileStore.java:166)
+	at org.h2.mvstore.MVStore.<init>(MVStore.java:390)
+	... 28 more
+Caused by: java.nio.channels.OverlappingFileLockException
+	at sun.nio.ch.SharedFileLockTable.checkList(FileLockTable.java:255)
+	at sun.nio.ch.SharedFileLockTable.add(FileLockTable.java:152)
+	at sun.nio.ch.FileChannelImpl.tryLock(FileChannelImpl.java:1108)
+	at org.h2.store.fs.FileNio.tryLock(FilePathNio.java:121)
+	at java.nio.channels.FileChannel.tryLock(FileChannel.java:1155)
+	at org.h2.mvstore.FileStore.open(FileStore.java:163)
+	... 29 more
