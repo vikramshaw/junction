@@ -48,7 +48,7 @@ structure will be assigned to the :json-params. The parameters will also be merg
 standard :params map.
 
 Since Ring middleware consists of simple data transformation function, we can string them together 
-along with our composure routes to put together an entire application.
+along with our compojure routes to put together an entire application.
 
 *** wrap-json-response
 The wrap-json-response middleware will convert any response with a collection as a body (e.g. map, 
@@ -71,8 +71,7 @@ datasource to functions ~create-db~ and ~seed~ from ~dbtable.clj~ to create tabl
 refresh_token, etc and add multiple entries into these tables, respectively. 
 
 This function applies functions from ~dbtable.clj~ and ~datasource.clj~ creates the database
-table and fills the data in the respective database tables. This is a part of initialisation upon
-starting the server and its result can be viewed after running the H2 database and ~lein run~
+table and fills the data in the respective database tables. Its result can be viewed after running the H2 database and ~lein run~
 command.
 
 #+BEGIN_SRC clojure
@@ -136,7 +135,7 @@ As the name suggests, the result of this is that the user is signed in and a fre
 authentication token is generated for the user and can be viewed in the ~refresh_token~ table.
 
 Upon having trouble signing in but none when it comes to signing up, the issue might be with having
-a lower version of java (Before Java 8 Update 151). In this case one may need to either upgrade or
+a lower version of java (Before Java 8 Update 151). In this case, one may need to either upgrade or
 install the Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files.
 This is because in the prior versions, Java virtual machine uses a policy that only allows
 restricted cryptography key sizes due to US export laws.
@@ -147,9 +146,15 @@ This can be amended by running the following script (for Linux systems).
 $JAVA_HOME/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
 #+end_src
 
-After this one can run ~sudo update-alternatives --config java~, followed by
-~sudo nano /etc/environment~ and changing the environment variable via ~source /etc/environment~
-followed by ~echo $JAVA_HOME~ that displays the version.
+One can run ~sudo update-alternatives --config java~ which lists all the different java versions,
+and only comes along if your system has had multiple java installs. In this case, you have to copy
+the path of the latest java install from the ~update-alternatives~ table as it may not be the
+default path.
+This needs to be used to add or modify the JAVA_HOME variable in /etc/environment with
+the new path as follows: ~$JAVA_HOME="[path]"~.
+Once this file is saved, you have to reload the environment in the shell using
+~source /etc/environment~ and ~sudo nano /etc/environment~ in case of editing /etc/environment.
+You can check the updated java version using  ~echo $JAVA_HOME~.
 
 ** -main function
 Setting a default namespace will automatically call a function ~main~ when the stamp project is run
