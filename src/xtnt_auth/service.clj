@@ -31,7 +31,6 @@
   (ks/public-key
    (io/resource (:pubkey auth-conf))))
 
-
 (defn- unsign-token [auth-conf token]
   (jwt/unsign token (pub-key auth-conf)))
 
@@ -46,7 +45,6 @@
         token (jwt/sign {:user-id (:id user)}
                         (priv-key auth-conf)
                         {:alg :rs256 :typ :jwt :iat iat :exp (-> (t/plus (t/now) (t/days 30)) (util/to-timestamp))})]
-
     (store/add-refresh-token! conn {:user_id (:id user)
                                     :issued iat
                                     :token token})
@@ -63,7 +61,6 @@
         [true (make-token-pair! conn auth-conf (:user res))]
         [false res]))))
 
-
 (defn refresh-auth-token [ds auth-conf refresh-token]
   (if-let [unsigned (unsign-token auth-conf refresh-token)]
     (jdbc/with-db-transaction [conn ds]
@@ -76,7 +73,6 @@
           [false {:message "Refresh token revoked/deleted or new refresh token already created"}])))
     [false {:message "Invalid or expired refresh token provided"}]))
 
-
 (defn invalidate-refresh-token [ds auth-conf refresh-token]
   (let [unsigned (unsign-token auth-conf refresh-token)]
     (if unsigned
@@ -88,9 +84,9 @@
 
 (defn sign-up [ds credentials]
   (jdbc/with-db-transaction [conn ds]
-    (let [user (store/find-user-by-username conn (:username credentials)) 
+    (let [user (store/find-user-by-username conn (:username credentials))
           error [false {:message "Error adding User"}]
-          already-exist [false {:message "User already exist"}]]
+          already-exist [false {:message "User already exists"}]]
       (if (nil? user)
         [true (add-user! ds {:username (:username credentials)
                              :password (:password credentials)})]

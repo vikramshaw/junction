@@ -36,7 +36,8 @@
   (fn [req]
     (handler (assoc req :auth-conf {:privkey "xtnt_privkey.pem"
                                     :pubkey "xtnt_pubkey.pem"
-                                    :passphrase "secret-key"}))))
+                                    :passphrase "passp"}))))
+
 (def handler
   (wrap-cors app-routes
              :access-control-allow-origin [#".*"]

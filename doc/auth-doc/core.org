@@ -1,13 +1,60 @@
 ** Middleware
-Handlers are the functions that make up your application. They accept responses and return responses. Middleware is a set of functions that add additional functionality to handlers. They are higher-level functions in that they accept a handler as a parameter and return a value which is a new handler function that will call the original handler function. This pattern allows you to wrap your handler in a number of middleware functions to build up layers of functionality.
-*** wrap-json-response
-The wrap-json-response middleware will convert any response with a collection as a body (e.g. map, vector, set, seq, etc) into JSON.
+Handlers are the functions that make up your application. They accept responses and return 
+responses. Middleware is a set of functions that add additional functionality to handlers. They are 
+higher-level functions, as in they accept a handler as a parameter and return a value which is a new
+handler function that will call the original handler function. This pattern allows you to wrap your 
+handler in a number of middleware functions to build up layers of functionality.
+
+Handler function takes a request map as its argument and converts it to a response map.
+Middleware can wrap handlers or other middlewares thereby affecting their behavior. We add a number
+of wrappers to the handler
+
+*** wrap-cors
+The first middleware layer ~handler~ comprises of the defroutes function ~approutes~ being called
+inside it. This wrapper permissively authorizes the user agent of an allowed origin to use all
+requested methods and headers using keys such as ~:access-control-allow-origin~,
+~:access-control-allow-methods~, ~:access-control-allow-headers~ etc.  
+
+*** wrap-datasource
+Attaches the database options to the requests via the ~get-ds~ function within the ~:datasource~
+key. This ~get-ds~ function is defined in ~datasource.clj~ file.
+The library ~hikari.cp~ is used to initialize a connection pool. We provide the h2 database login
+details within ~datasource-options~. ~username~ and ~password~ are necessary along with the
+~adapter~ and ~url~. ~adapter~ and ~jdbc-url~ are mutually exclusive hence we simply use ~url~ and
+then create the datasource via ~make-datasource~.
+
+*** wrap-config
+#+BEGIN_SRC clojure
+{ :privkey "xtnt_privkey.pem" 
+  :pubkey "xtnt_pubkey.pem"
+  :passphrase "passp"}
+#+END_SRC
+
+These are the private key and public key files respectively which are in ~resources~ 
+folder. Along with the above, you can also attach the passphrase attribute which is a word that
+protects the private key files and prevents unauthorized users from encryting them. It's just the
+secret encryption/decryption key used for Ciphers. The setting of this passphrase is described
+[[creating passphrase][here]].
+
+*** wrap-keyword-params 
+It converts the raw data into the parameter maps ~:keyword-params~ and ~:form-params~, combines 
+those into single and easy to use :params maps and finally converts all the keys from string to 
+clojure keywords.
+
 *** wrap-json-params
-The wrap-json-params middleware is an alternative to wrap-json-body for when it's convenient to treat a JSON request as a map of parameters. Rather than replace the :body key, the parsed data structure will be assigned to the :json-params. The parameters will also be merged into the standard :params map
-*** wrap-params and wrap-keyword-params 
-It convert the raw data into the parameter maps ~:keyword-params~ and ~:form-params~, combine those into single and easy to use :params maps and finally convert all the keys from string to clojure keywords.
-Since Ring middleware consist of simple data transformation function, we can string them together along with our composure routes to put together  an entire application
-#+BEGIN_SRC
+The wrap-json-params middleware is an alternative to wrap-json-body for when it's convenient to 
+treat a JSON request as a map of parameters. Rather than replace the :body key, the parsed data 
+structure will be assigned to the :json-params. The parameters will also be merged into the 
+standard :params map.
+
+Since Ring middleware consists of simple data transformation function, we can string them together 
+along with our compojure routes to put together an entire application.
+
+*** wrap-json-response
+The wrap-json-response middleware will convert any response with a collection as a body (e.g. map, 
+vector, set, seq, etc) into JSON.
+
+#+BEGIN_SRC clojure
 (def app
   (-> app-routes
       wrap-datasource
@@ -16,53 +63,163 @@ Since Ring middleware consist of simple data transformation function, we can str
       wrap-json-params
       wrap-json-response))
 #+END_SRC
-** wrap-datasource and wrap-config functions
-These functions are adding a new field with a value to all requests. In *wrap-config* function you will notice 
-#+BEGIN_SRC
-{ :privkey "xtnt_privkey.pem" 
-  :pubkey "xtnt_pubkey.pem"}
-#+END_SRC
-These are nothing but the private key and public key files respectively which are in ~resources~ folder.
+
 ** Bootstrap function
-This function takes the input from ~dbtable.clj~ and ~datasource.clj~ and create the database table and fill the data in the respective database table
-#+BEGIN_SRC
+Upon starting the server, the bootstrap function is run as a part of the initialization process.
+We use the function ~get-ds~ from ~datasource.clj~ to obtain the datasource. We apply this
+datasource to functions ~create-db~ and ~seed~ from ~dbtable.clj~ to create tables such as user,
+refresh_token, etc and add multiple entries into these tables, respectively. 
+
+This function applies functions from ~dbtable.clj~ and ~datasource.clj~ creates the database
+table and fills the data in the respective database tables. Its result can be viewed after running the H2 database and ~lein run~
+command.
+
+#+BEGIN_SRC clojure
 (defn bootstrap []
   (println "Bootstrapping....")
   (let [ds (get-ds)]
     (create-db ds)
     (seed ds)))
 #+END_SRC
-This function needs to be execute as the server starts
+
+This function needs to be executed as the server starts.
+
+** Compojure function
+We use this library to work with ring and manage HTTP method switching to run code based on HTTP
+methods GET, PUT, POST and DELETE. The ~defroute~ function here is used for associating handlers
+and otherwise for defining routes by accepting requests, via ~app-routes~ calling different
+functions.
+
+*** sign-up
+In order to test this, we can sign up via terminal emulating a web browser using the following
+command
+
+#+begin_src
+curl -i -X POST -d '{"username": "bs", "password":"123"}' -H "Content-type: application/json" http://localhost:4000/sign-up
+#+end_src
+
+The curl -X POST implies an HTTP POST request, the ~-d~ parameter (long version: ~--data~) tells
+curl that what follows will be POST parameters i.e the username and password.
+Based on the route mentioned, the function ~sign-up~ will be called, present in ~handlers.clj~ which
+in turn calls another ~sign-up~ function from ~service.clj~, arguments being ~:datasource~ and
+~:params~. 
+
+Within ~sign-up~ we call function ~find-user-by-username~ from ~store.clj~ which queries to check
+whether the username already exists. If ~nil~ is the return value then another function ~add-user!~
+is called given the arguments ~:datasource~ of the request and the ~:username~ and ~:password~
+credentials provided as a map of maps.
+If the user already exists then a message saying the same appears. The other possibility is that
+there's been an error adding the user which is also shown.
+
+The result of ~sign-up~ is that the user appears in the ~user~ table in the database along with
+updation of ~user_id~ and ~role_id~. ~add-user~ function is explained in ~store.org~ file.
+
+*** create-auth-token
+This is the function that gets called upon signing in. We can sign in via terminal using the
+following command
+
+#+begin_src
+curl -i -X POST -d '{"username": "bs", "password":"123"}' -H "Content-type: application/json" http://localhost:4000/create-auth-token
+#+end_src
+
+POST parameters i.e the username and password for signing in are provided and based on the route
+~create-auth-token~ will be called from ~handlers.clj~ which in turn calls another
+~create-auth-token~ function from ~service.clj~, arguments being ~:datasource~, ~:params~ and
+~:auth-conf~.
+
+Within ~create-auth-token~ we call function ~auth-user~ present in the same file, which checks the
+username against those already present. Subsequently ~make-token-pair!~ is used to create the sign
+token or refresh it based on the timestamp of the token expiration
+
+As the name suggests, the result of this is that the user is signed in and a freshly created
+authentication token is generated for the user and can be viewed in the ~refresh_token~ table.
+
+Upon having trouble signing in but none when it comes to signing up, the issue might be with having
+a lower version of java (Before Java 8 Update 151). In this case, one may need to either upgrade or
+install the Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files.
+This is because in the prior versions, Java virtual machine uses a policy that only allows
+restricted cryptography key sizes due to US export laws.
+
+This can be amended by running the following script (for Linux systems). 
+
+#+begin_src
+$JAVA_HOME/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
+#+end_src
+
+One can run ~sudo update-alternatives --config java~ which lists all the different java versions,
+and only comes along if your system has had multiple java installs. In this case, you have to copy
+the path of the latest java install from the ~update-alternatives~ table as it may not be the
+default path.
+This needs to be used to add or modify the JAVA_HOME variable in /etc/environment with
+the new path as follows: ~$JAVA_HOME="[path]"~.
+Once this file is saved, you have to reload the environment in the shell using
+~source /etc/environment~ and ~sudo nano /etc/environment~ in case of editing /etc/environment.
+You can check the updated java version using  ~echo $JAVA_HOME~.
+
 ** -main function
-I have used ~ring.server~ for this project because it give us a lot of option for customization.
+Setting a default namespace will automatically call a function ~main~ when the stamp project is run
+via ~lein run~. This namespace is mentioned in ~project.clj~ inside the ~defproject~ macro's ~:main~
+key. Using ~-~ at the start of ~-main~ helps Leiningen identify the entry point of the project from
+wherein the ~ring-server~ is run. ~wrap-reload~ that we use in ~-main~ function is also a middleware
+function that enables live reloading by detecting file changes before the request is passed to the
+relevant handler functions.
+
+I have used ~ring-server~ library for this project because it gives us a lot of options for 
+customizations. The options that are helpful are utilized via the funtion ~serve~ present in 
+~ring.server.standalone~ file of the library. It accepts the main handler ~app~ on top of which
+~wrap-reload~ containing the middleware function providing the appropriate functionalities.
+
 The following options are supported:
 + ~:port~ - The port to start the server on, overrides $PORT
 + ~:join?~ - Whether to wait until the server stops (default true)
 + ~:init~ - A function executed when the server starts
 + ~:destroy~ - A function executed when the server stops
-+ ~:open-browser?~ - True if you want a browser to be opened to the server. Defaults to true in development mode, false in production mode.
-+ ~:browser-uri~ - A path to append to the target URL if opening a browser (default none). The full URI will be constructed like: http://{host}:{port}{browser-uri}
-+ ~:stacktraces?~ - True if you want a stacktrace to be displayed in the browser when an exception is raised. Default to true in development, false in production.
-+ ~:stacktrace-middleware~ - Override the default Ring stacktrace middleware with a custom middleware function.
-+ ~:auto-reload?~ - True if you want your source files to be automatically reloaded when they are modified. Defaults to true in development, false in production.
-+ ~:reload-paths~ - A seq of source paths to reload. Defaults to ["src"]. Only relevant if :auto-reload? is true.
-+ ~:auto-refresh?~ - True if you want your browser to automatically refresh when source files are changed. Defaults to false.
-+ ~:refresh-paths~ - A seq of source paths to refresh. Defaults to ["src" "resources"]. Only relevant if :auto-refresh? is true.
++ ~:open-browser?~ - True if you want a browser to be opened to the server. Defaults to true in 
+development mode, false in production mode.
++ ~:browser-uri~ - A path to append to the target URL if opening a browser (default none). The full
+URI will be constructed like: ~http://{host}:{port}{browser-uri}~ 
++ ~:stacktraces?~ - True if you want a stacktrace to be displayed in the browser when an exception
+is raised. Default to true in development, false in production.
++ ~:stacktrace-middleware~ - Override the default Ring stacktrace middleware with a custom
+middleware function
++ ~:auto-reload?~ - True if you want your source files to be automatically reloaded when they are 
+modified. Defaults to true in development, false in production.
++ ~:reload-paths~ - A seq of source paths to reload. Defaults to ["src"]. Only relevant if 
+:auto-reload? is true.
++ ~:auto-refresh?~ - True if you want your browser to automatically refresh when source files are 
+changed. Defaults to false.
++ ~:refresh-paths~ - A seq of source paths to refresh. Defaults to ["src" "resources"]. Only
+relevant if :auto-refresh? is true.
+
+We use ~:port~ and ~:init~ to assign a port number and run the ~bootstrap~ function respectively.
 
 ** Dot Privacy Enhanced Mail (.pem) files
-This files are concatenated certificate containers frequently used in certificate installations when multiple certificates that form a complete chain are being imported as a single file. They are a defined standard in RFCs 1421 through 1424. They can be thought of as a layered container of chained certificates. A .pem file is a container format that may just include the public certificate or the entire certificate chain (private key, public key, root certificates).
+These files are concatenated certificate containers frequently used in certificate installations
+when multiple certificates that form a complete chain are being imported as a single file. They are
+a defined standard in RFCs 1421 through 1424. They can be thought of as a layered container of
+chained certificates. A .pem file is a container format that may just include the public certificate
+or the entire certificate chain (private key, public key, root certificates).
 
-With the user store in place we can turn our attention to creating our (signed) token. Buddy provides us with buddy-sign. We could have opted for a HMAC based algorithm, but we’ll take it up one notch and use an algorithm that requires a public/private key-pair. Not only that, but we’ll serialize our token content in a json format following the jws draft spec.
+With the user store in place we can turn our attention to creating our (signed) token. Buddy 
+provides us with buddy-sign. We could have opted for a HMAC based algorithm, but we’ll take it up
+one notch and use an algorithm that requires a public/private key-pair. Not only that, but we’ll
+serialize our token content in a json format following the jws draft spec.
+
+<<creating passphrase>>
 *** How to generate the private key and public key?
-In ~Terminal or Shell~ Goto your project resource folder ~(xtnt-auth/resources)~ and execute the below command.
-You’ll be asked to enter a passphrase in both steps below(passphrase is nothing but which you have defined in ~core.clj~ file in ~wrap-config~ function line number 33).
+In ~Terminal or Shell~ Goto your project resource folder ~(xtnt-auth/resources)~ and execute the
+below command. You’ll be asked to enter a passphrase in both steps below (passphrase is nothing but
+which you have defined in ~core.clj~ file in ~wrap-config~ function line number 33).
+
 #+ATTR_HTML: :textarea t :width 40
 #+BEGIN_EXAMPLE
 openssl genrsa -aes256 -out xtnt_privkey.pem 2048
 #+END_EXAMPLE
-The above code will generate AES-256 encrypted private key in resource folder. The below code is for public key which will be generated with respect to private key.
+
+The above code will generate AES-256 encrypted private key in resource folder. The below code is for
+public key which will be generated with respect to private key.
+
 #+ATTR_HTML: :textarea t :width 40
 #+BEGIN_EXAMPLE
 openssl rsa -pubout -in xtnt_privkey.pem -out xtnt_pubkey.pem
-#+END_EXAMPLE
-
+#+END_EXAMPLE 
