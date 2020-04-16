@@ -91,3 +91,12 @@
         [true (add-user! ds {:username (:username credentials)
                              :password (:password credentials)})]
         already-exist))))
+
+(defn change-password [conn credentials]
+  (let [user    (store/find-user-by-username conn (:username credentials))
+        error   [false {:message "Invalid Username or Password"}]
+        success [true {:message "Password has been changed successfully"}]]
+    (if (not= nil? user)
+      (if (hs/check (:old-password credentials) (:password user))
+        [(jdbc/update! conn :user {:password (hs/encrypt (:new-password credentials))} ["id = ?" (:id user)]) success]
+        error))))
