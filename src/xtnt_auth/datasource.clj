@@ -7,7 +7,7 @@
 (def datasource-options {:adapter "h2"
                          :url     "jdbc:h2:tcp://localhost/~/test"
                          :username ""
-                         :password "abc"})
+                         :password ""})
 
 
 (defn get-ds []
