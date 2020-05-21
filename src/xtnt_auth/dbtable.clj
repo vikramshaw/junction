@@ -24,16 +24,16 @@
                          "create table user_role (
                            id integer auto_increment primary key,
                            role_id integer not null,
-                           user_id integer not null,
+                           user_id integer,
                            foreign key (role_id) references role (id),
                            foreign key (user_id) references user (id))"
 
                          "create table refresh_token (
                            id integer auto_increment primary key,
-                           user_id integer not null,
+                           user_id integer,
                            valid boolean default true not null,
-                           issued long not null,
-                           token varchar2(512) not null,
+                           issued varchar(255) not null,
+                           token varchar(512) not null,
                            foreign key (user_id) references user (id),
                            unique (user_id, issued))"])))
 

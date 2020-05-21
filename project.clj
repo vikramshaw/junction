@@ -14,6 +14,7 @@
                  [ch.qos.logback/logback-classic "1.3.0-alpha4"]
                  [buddy/buddy-sign "3.1.0"]
                  [buddy/buddy-hashers "1.4.0"]
+                 [mysql/mysql-connector-java "8.0.15"]
                  [ring-server "0.5.0"]]
 
   :repl-options {:init-ns xtnt-auth.core}
