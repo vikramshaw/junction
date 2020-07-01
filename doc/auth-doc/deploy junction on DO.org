@@ -129,7 +129,7 @@ logged in the server where you will have MySql and the Junction project. In orde
 then create the database and then you need to run ~lein run~ in the project directory. But before that you need to start the MySql server, so run ~sudo service mysql start~ to 
 start the server or in some case if you need to restart the server then run this ~sudo service mysql restart~ 
  
-1. I already explained above on how to connect to MySql, so after connecting you need to create the database.
+**** 1. I already explained above on how to connect to MySql, so after connecting you need to create the database.
 
 Run this command
 #+BEGIN_SRC
@@ -146,7 +146,7 @@ mysql> show tables;                      ;; it will give you the list of tables 
 mysql> SELECT * FROM user;               ;; it will show you the content of user table
 #+END_SRC
 
-2. Open another terminal or shell and run the below command
+**** 2. Open another terminal or shell and run the below command
  - ssh root@165.22.220.143
  - Enter the server password
  - cd /home/junction/                    ;; as the junction project is in home directory
