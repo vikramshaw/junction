@@ -1,0 +1,183 @@
+* Deploy Junction On Digital Ocean Server.
+1. Push your code to master (after you make sure its not broken) in [[https://code.leap-os.com/xtnt/junction][Junction]]
+2. ssh root@165.22.220.143
+3. Say yes for new certificate
+4. Copy and paste the password which you get when you create the droplet in Digital Ocean. 
+5. If correct, it will ask you to retype and then set a new password
+6. Set new password
+7. cd /home
+8. git clone junction project from leap-os
+9. Now after cloning the project you need to install MySql on the server to run the Junction project
+10. After installing the MySql, goto the project directory and then run 
+#+BEGIN_EXAMPLE 
+lein run
+#+END_EXAMPLE
+
+* Steps to run MySql on the server
+
+*** 1. Installing MySQL
+On Ubuntu 18.04, only the latest version of MySQL is included in the APT package repository by default.
+
+To install it, update the package index on your server with apt:
+#+BEGIN_SRC
+sudo apt update
+#+END_SRC
+
+Then install the default package:
+#+BEGIN_SRC
+sudo apt install mysql-server
+#+END_SRC
+
+This will install MySQL, but will not prompt you to set a password or make any other configuration changes.
+ Because this leaves your installation of MySQL insecure, we will address this next.
+
+*** 2. Configuring MySQL
+For fresh installations, you’ll want to run the included security script. 
+This changes some of the less secure default options for things like remote root logins and sample users. 
+On older versions of MySQL, you needed to initialize the data directory manually as well, but this is done automatically now.
+
+Run the security script:
+#+BEGIN_SRC
+sudo mysql_secure_installation
+#+END_SRC
+This will take you through a series of prompts where you can make some changes to your MySQL installation’s security options. 
+The first prompt will ask whether you’d like to set up the Validate Password Plugin, 
+which can be used to test the strength of your MySQL password. Regardless of your choice, 
+the next prompt will be to set a password for the MySQL root user. Enter and then confirm a secure password of your choice.
+
+From there, it will prompt you some security options that you should choose in order to secure the MySQL server:
+
++ /Remove anonymous users? (Press y|Y for Yes, any other key for No) : y/
++ /Disallow root login remotely? (Press y|Y for Yes, any other key for No) : y/
++ /Remove test database and access to it? (Press y|Y for Yes, any other key for No) : y/
++ /Reload privilege tables now? (Press y|Y for Yes, any other key for No) : y/
+
+Now your MySql has been installed.
+
+* Connect to MySQL server
+Run this command
+#+BEGIN_SRC
+mysql -u root -p
+#+END_SRC
+
+/where -u denotes username, root is the name of the user and -p denotes the password./
+
+ You will be asked to enter the MySql password after executing the above syntax. Enter the password and you will see the MySql database.
+#+BEGIN_SRC
+Vikrams-MacBook-Pro:~ vikramshaw$ mysql -u root -p 
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 71
+Server version: 8.0.19 Homebrew
+
+Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql>
+#+END_SRC
+
+Now run this syntax which will change the authentication method from auth_socket to mysql_native_password.
+#+BEGIN_SRC
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'xxxxxxxxxx';
+mysql> FLUSH PRIVILEGES;
+#+END_SRC
+/This *xxxxxxxxxx* in the *native_password* above is the password which you have set for login the MySql./
+
+/If you get error like this when running the above syntax./
+#+BEGIN_SRC
+mysql>  ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'xtntserver';
+ERROR 1819 (HY000): Your password does not satisfy the current policy requirements
+#+END_SRC
+Then you need to set the ~validate_password.policy to LOW~ and then run the above syntax again.
+#+BEGIN_SRC
+mysql> SET GLOBAL validate_password.policy = LOW;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'xtntserver';
+Query OK, 0 rows affected (0.19 sec)
+#+END_SRC
+
+You can verify whether the authentication method is changed to ~native_password~ or not by running the below code to
+#+BEGIN_SRC
+mysql> SELECT user,authentication_string,plugin,host FROM mysql.user;
+
+
++------------------+------------------------------------------------------------------------+-----------------------+-----------+
+| user             | authentication_string                                                  | plugin                | host      |
++------------------+------------------------------------------------------------------------+-----------------------+-----------+
+| mysql.infoschema | $A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED | caching_sha2_password | localhost |
+| mysql.session    | $A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED | caching_sha2_password | localhost |
+| mysql.sys        | $A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED | caching_sha2_password | localhost |
+| root             | *567D692B8906027CB2E3B1215D3BFA72D90F5A79                              | mysql_native_password | localhost |
++------------------+------------------------------------------------------------------------+-----------------------+-----------+
+4 rows in set (0.00 sec)
+
+mysql> FLUSH PRIVILEGES;
+Query OK, 0 rows affected (0.00 sec)
+#+END_SRC
+
+Check the ~plugin~ section for root user. Your Mysql is configured and is ready to use.
+
+* Run the Junction project 
+Open the terminal or shell connect to the server by runnning ~ssh root@165.22.220.143~ you will be asked for the server password. After entering the server-password you will be
+logged in the server where you will have MySql and the Junction project. In order to run the project first you need to connect to the MySql, 
+then create the database and then you need to run ~lein run~ in the project directory. But before that you need to start the MySql server, so run ~sudo service mysql start~ to 
+start the server or in some case if you need to restart the server then run this ~sudo service mysql restart~ 
+ 
+1. I already explained above on how to connect to MySql, so after connecting you need to create the database.
+
+Run this command
+#+BEGIN_SRC
+mysql> create database test;
+#+END_SRC
+/test is the database name which we are creating./
+
+Few commands which you will need time and again
+#+BEGIN_SRC
+mysql> show databases;                   ;; see the list of database
+mysql> drop database database-name;      ;; delete the specific database
+mysql> use database-name;                ;; to use the specific database
+mysql> show tables;                      ;; it will give you the list of tables for the specific database
+mysql> SELECT * FROM user;               ;; it will show you the content of user table
+#+END_SRC
+
+2. Open another terminal or shell and run the below command
+ - ssh root@165.22.220.143
+ - Enter the server password
+ - cd /home/junction/                    ;; as the junction project is in home directory
+ - lein run
+
+Now your project will be running.
+
+* Check the functionality of the project by sign-up, sign-in, change password
+Open a new terminal and check functionality for:- 
+
+*Sign-un*
+#+BEGIN_SRC
+curl -i -X POST -d '{"username": "bs", "password":"123"}' -H "Content-type: application/json" http://165.22.220.143:4000/sign-up
+#+END_SRC
+
+*Sign-in*
+#+BEGIN_SRC
+curl -i -X POST -d '{"username": "bs", "password":"123"}' -H "Content-type: application/json" http://165.22.220.143:4000/create-auth-token
+#+END_SRC
+
+*Change-password*
+#+BEGIN_SRC
+curl -i -X POST -d '{"username": "bs", "old-password":"123", "new-password":"12345678"}' -H "Content-type: application/json" http://165.22.220.143:4000/change-password
+#+END_SRC
+
+All the above things are done on the server side. We need to do some changes in the junction project as well so that it will work properly.
+
+In datasource.clj
+#+BEGIN_SRC
+(def datasource-options {:dbtype        "mysql"
+                         :jdbc-url      "jdbc:mysql://localhost:3306/test"
+                         :username      "root"
+                         :password      "XXXXXXXXXX"})
+#+END_SRC
